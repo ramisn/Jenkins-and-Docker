@@ -1,0 +1,45 @@
+version: '2'
+services:
+  elasticsearch:
+    # image: docker.elastic.co/elasticsearch/elasticsearch:5.2.2
+    # image: docker.elastic.co/elasticsearch/elasticsearch:2.4.4
+    image: elasticsearch:2.4.4
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+  postgres:
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    image: postgres:9.6.2
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+  rails:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bin/docker-start-rails
+    depends_on:
+      - elasticsearch
+      - postgres
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - POSTGRESHOST=postgres
+      - POSTGRESPASS=postgres
+      - POSTGRESUSER=postgres
+    links:
+      - elasticsearch
+      - postgres
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/rails
+      - bundle:/usr/local/bundle
+volumes:
+  bundle: {}
+  elasticsearch: {}
+  postgres: {}
